@@ -12,3 +12,4 @@ packages/
 *.nupkg
 *.pdb
 *.zip
+/package/thunderstore/StationItemReturn/StationItemReturn.dll
