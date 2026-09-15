@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <ModName>StationItemReturn</ModName>
+  </PropertyGroup>
+
+  <Target Name="InitializePackageProperties">
+    <PropertyGroup>
+      <EffectiveModName Condition="'$(ModName)' != ''">$(ModName)</EffectiveModName>
+      <EffectiveModName Condition="'$(EffectiveModName)' == '' and '$(TargetName)' != ''">$(TargetName)</EffectiveModName>
+      <EffectiveModName Condition="'$(EffectiveModName)' == '' and '$(AssemblyName)' != ''">$(AssemblyName)</EffectiveModName>
+      <EffectiveModName Condition="'$(EffectiveModName)' == '' and '$(MSBuildProjectName)' != ''">$(MSBuildProjectName)</EffectiveModName>
+
+      <ThunderstorePackageDir>$(ProjectDir)package\thunderstore\$(EffectiveModName)\</ThunderstorePackageDir>
+      <ThunderstoreZipPath>$(ProjectDir)package\thunderstore\$(EffectiveModName).zip</ThunderstoreZipPath>
+      <R2ModManPluginDir>D:\r2modman\Valheim\profiles\beta\BepInEx\plugins\shudnal-$(EffectiveModName)\</R2ModManPluginDir>
+      <ILRepackLibraryPath>$(TargetDir);$(ReferencePath)</ILRepackLibraryPath>
+    </PropertyGroup>
+
+    <Error Condition="'$(EffectiveModName)' == ''" Text="Mod name was not resolved. Set &lt;ModName&gt;StationItemReturn&lt;/ModName&gt; in ILRepack.targets." />
+    <Error Condition="'$(ThunderstorePackageDir)' == ''" Text="ThunderstorePackageDir was not resolved." />
+    <Error Condition="'$(ThunderstoreZipPath)' == ''" Text="ThunderstoreZipPath was not resolved." />
+  </Target>
+
+  <Target Name="ReadPackageVersion" AfterTargets="Build" DependsOnTargets="InitializePackageProperties">
+    <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
+      <Output TaskParameter="Assemblies" ItemName="_PackageAssemblyIdentity" />
+    </GetAssemblyIdentity>
+
+    <PropertyGroup>
+      <PackageVersion>%(_PackageAssemblyIdentity.Version)</PackageVersion>
+    </PropertyGroup>
+
+    <Error Condition="'$(PackageVersion)' == ''" Text="Package version was not resolved from $(TargetPath)." />
+    <Message Text="Detected package version: $(PackageVersion)" Importance="High" />
+  </Target>
+
+  <Target Name="ILRepacker" AfterTargets="ReadPackageVersion">
+    <ItemGroup>
+      <InputAssemblies Include="$(TargetPath)" />
+    </ItemGroup>
+
+    <ILRepack
+      Parallel="true"
+      DebugInfo="true"
+      Internalize="true"
+      InputAssemblies="@(InputAssemblies)"
+      OutputFile="$(TargetPath)"
+      TargetKind="SameAsPrimaryAssembly"
+      LibraryPath="$(ILRepackLibraryPath)" />
+  </Target>
+
+  <Target Name="CopyDLLPackage" AfterTargets="ILRepacker">
+    <MakeDir Directories="$(ThunderstorePackageDir)" />
+    <Delete Files="$(ThunderstorePackageDir)$(TargetName).pdb" />
+
+    <Copy
+      SourceFiles="$(TargetPath)"
+      DestinationFolder="$(ThunderstorePackageDir)" />
+
+    <Message Text="Copied to Thunderstore package folder: $(ThunderstorePackageDir)" Importance="High" />
+  </Target>
+
+  <Target Name="UpdateThunderstoreManifest" AfterTargets="CopyDLLPackage">
+    <Error Condition="!Exists('$(ProjectDir)UpdateThunderstoreManifest.ps1')" Text="UpdateThunderstoreManifest.ps1 was not found in $(ProjectDir)." />
+    <Error Condition="!Exists('$(ThunderstorePackageDir)manifest.json')" Text="Thunderstore manifest was not found: $(ThunderstorePackageDir)manifest.json" />
+
+    <Exec Command="powershell -ExecutionPolicy Bypass -NoProfile -File &quot;$(ProjectDir)UpdateThunderstoreManifest.ps1&quot; -ManifestPath &quot;$(ThunderstorePackageDir)manifest.json&quot; -Version &quot;$(PackageVersion)&quot;" />
+  </Target>
+
+  <Target Name="ZipThunderstorePackage" AfterTargets="UpdateThunderstoreManifest">
+    <ZipDirectory
+      SourceDirectory="$(ThunderstorePackageDir)"
+      DestinationFile="$(ThunderstoreZipPath)"
+      Overwrite="true" />
+  </Target>
+
+  <Target Name="CopyDLLPlugins" AfterTargets="ILRepacker">
+    <MakeDir Directories="$(R2ModManPluginDir)" />
+    <Copy
+      SourceFiles="$(TargetPath)"
+      DestinationFolder="$(R2ModManPluginDir)" />
+
+    <Message Text="Copied to r2modman profile: $(R2ModManPluginDir)" Importance="High" />
+  </Target>
+
+</Project>
