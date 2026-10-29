@@ -14,7 +14,7 @@ namespace StationItemReturn
     {
         public const string PluginId = "shudnal.StationItemReturn";
         public const string PluginName = "Station Item Return";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.0.1";
         public const string ConditionalConfigSyncGuid = "_shudnal.ConditionalConfigSync";
 
         internal static readonly ConfigSync ConfigSync = new ConfigSync(PluginId)
