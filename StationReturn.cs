@@ -731,7 +731,7 @@ namespace StationItemReturn
                 return;
             }
 
-            station.SetSlot(slot, "", 0f, CookingStation.Status.NotDone, cheated: false);
+            station.SetSlot(slot, "", 0f, CookingStation.Status.NotDone, cheated: false, sender: 0L);
             station.m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetSlotVisual", slot, "");
             Mod.LogInfo($"Returned cooking station item '{prefab.name}' from slot {slot}.");
 

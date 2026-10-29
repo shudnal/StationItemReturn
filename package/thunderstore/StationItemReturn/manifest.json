@@ -1,6 +1,6 @@
 {
   "name": "StationItemReturn",
-  "version_number": "1.0.0",
+  "version_number": "1.0.1",
   "website_url": "https://github.com/shudnal/StationItemReturn",
   "description": "Return stored input items and fuel from supported stations one item at a time.",
   "dependencies": [
